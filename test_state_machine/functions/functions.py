@@ -22,7 +22,10 @@ def CPAggr(event, context):
 
 def GeneralPreprocessing(event, context):
     time.sleep(2)
-    return {"status": "GeneralPreprocessing complete"}
+    
+    package_id = event.get("packageId", "")
+    processed_package = {"packageId": package_id + "_proc"}
+    return processed_package
 
 def SplitInd(event, context):
     time.sleep(2)
@@ -30,8 +33,14 @@ def SplitInd(event, context):
 
 def Div(event, context):
     time.sleep(2)
-    # Return a dummy contractualPackages array for downstream processing.
-    return {"contractualPackages": [
-        {"packageId": "dummy1"},
-        {"packageId": "dummy2"}
-    ]}
+    package_id = event.get("processedData", "")
+    
+    sub_contractualPackages = [
+        {"packageId": f"sub_{package_id}_1"},
+        {"packageId": f"sub_{package_id}_2"}
+    ]
+    
+    return {
+        "contractualPackages": package_id,  
+        "sub_contractualPackages": sub_contractualPackages
+    }

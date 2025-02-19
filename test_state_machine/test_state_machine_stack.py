@@ -140,18 +140,24 @@ class TestStateMachineStack(Stack):
             task_gp = tasks.LambdaInvoke(
                 self, "InvokeGeneralPreprocessing_Task",
                 lambda_function=lambda_GeneralPreprocessing,
-                output_path="$.Payload"
+                output_path="$",
+                result_path="$.processedData"
             )
             task_si = tasks.LambdaInvoke(
                 self, "InvokeSplitInd_Task",
                 lambda_function=lambda_SplitInd,
-                output_path="$.Payload"
+                output_path="$",
+                result_path="$.splitIndResult"
             )
             task_div = tasks.LambdaInvoke(
                 self, "InvokeDiv_Task",
                 lambda_function=lambda_Div,
-                output_path="$.Payload"
+                output_path="$",
+                payload=sfn.TaskInput.from_object({     
+                "processedData": sfn.JsonPath.string_at("$.processedData.Payload.packageId"),
+                })
             )
+
             # Chain the PDF processing tasks sequentially.
             pdf_chain_local = sfn.Chain.start(task_gp).next(task_si).next(task_div)
 
@@ -159,7 +165,7 @@ class TestStateMachineStack(Stack):
             # It expects the Div function to return an object with a "contractualPackages" array.
             contractual_map_local = sfn.Map(
                 self, "ProcessContractualPackages",
-                items_path="$.contractualPackages",  # Path to the array in the Div output.
+                items_path="$.Payload.sub_contractualPackages",  # Path to the array in the Div output.
                 # max_concurrency can be specified as a string if needed, e.g., max_concurrency="300"
                 result_path="$.contractualPackageResults"
             )
